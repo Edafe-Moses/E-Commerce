@@ -5,16 +5,12 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAppDispatch, useAppSelector } from '@/lib/hooks';
 import { registerUser, clearError } from '@/lib/features/auth/authSlice';
-import { Header } from '@/components/layout/Header';
-import { Footer } from '@/components/layout/Footer';
+import Header from '@/components/common/NavBar';
+import Footer from '@/components/common/Footer';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Store, Eye, EyeOff, Loader, Building, User } from 'lucide-react';
+import { Eye, EyeOff, Loader } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function RegisterPage() {
@@ -23,7 +19,6 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    accountType: 'B2C' as 'B2C' | 'B2B',
     company: '',
   });
   const [showPassword, setShowPassword] = useState(false);
@@ -33,16 +28,20 @@ export default function RegisterPage() {
   const router = useRouter();
   const { isLoading, error } = useAppSelector((state) => state.auth);
 
+  const inputs = [
+    { id: 'name', name: 'name', type: 'text', placeholder: 'Enter your full name', required: true },
+    { id: 'email', name: 'email', type: 'email', placeholder: 'Enter your email', required: true },
+    { id: 'password', name: 'password', type: showPassword ? 'text' : 'password', placeholder: 'Create a password', required: true },
+    { id: 'confirmPassword', name: 'confirmPassword', type: showConfirmPassword ? 'text' : 'password', placeholder: 'Confirm your password', required: true },
+    { id: 'company', name: 'company', type: 'text', placeholder: 'Enter your company name', required: false },
+  ];
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (error) {
       dispatch(clearError());
     }
-  };
-
-  const handleAccountTypeChange = (value: 'B2C' | 'B2B') => {
-    setFormData(prev => ({ ...prev, accountType: value, company: value === 'B2C' ? '' : prev.company }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -58,8 +57,8 @@ export default function RegisterPage() {
       return;
     }
 
-    if (formData.accountType === 'B2B' && !formData.company.trim()) {
-      toast.error('Company name is required for business accounts');
+    if (formData.company.trim() && !formData.name.trim()) {
+      toast.error('Full name is required for business accounts');
       return;
     }
 
@@ -68,8 +67,8 @@ export default function RegisterPage() {
         name: formData.name,
         email: formData.email,
         password: formData.password,
-        accountType: formData.accountType,
         company: formData.company || undefined,
+        accountType: 'B2C'
       })).unwrap();
       toast.success('Account created successfully!');
       router.push('/');
@@ -79,131 +78,45 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-black relative overflow-hidden">
       <Header />
       
-      <div className="container mx-auto px-4 py-16">
-        <div className="max-w-md mx-auto">
-          <div className="text-center mb-8">
-            <div className="flex items-center justify-center mb-4">
-              <Store className="h-12 w-12 text-primary" />
-            </div>
-            <h1 className="text-3xl font-bold">Create Account</h1>
-            <p className="text-muted-foreground mt-2">
-              Join EcomPro and start shopping today
-            </p>
+      {/* Background Pattern */}
+      <div className="absolute inset-0 bg-[linear-gradient(135deg,#1e1e1e_25%,#2a2a2a_50%,#1e1e1e_75%)] bg-[length:20px_20px] opacity-50"></div>
+
+      <div className="container mx-auto px-4 py-16 relative z-10">
+        <div className="max-w-md mx-auto text-center">
+          <div className="mb-8">
+            <Link href="/auth/login" className="text-blue-500 text-xl font-semibold mr-4">Login</Link>
+            <Link href="/auth/register" className="text-blue-500 text-xl font-semibold">Register</Link>
           </div>
 
-          <Card>
-            <CardHeader>
-              <CardTitle>Sign Up</CardTitle>
-              <CardDescription>
-                Create your account to access exclusive features
-              </CardDescription>
-            </CardHeader>
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {error && (
+              <Alert variant="destructive" className="text-center">
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            )}
 
-            <form onSubmit={handleSubmit}>
-              <CardContent className="space-y-4">
-                {error && (
-                  <Alert variant="destructive">
-                    <AlertDescription>{error}</AlertDescription>
-                  </Alert>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="name">Full Name</Label>
-                  <Input
-                    id="name"
-                    name="name"
-                    type="text"
-                    placeholder="Enter your full name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    name="email"
-                    type="email"
-                    placeholder="Enter your email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <Label>Account Type</Label>
-                  <RadioGroup
-                    value={formData.accountType}
-                    onValueChange={handleAccountTypeChange}
-                    className="grid grid-cols-2 gap-4"
-                  >
-                    <div>
-                      <RadioGroupItem value="B2C" id="b2c" className="peer sr-only" />
-                      <Label
-                        htmlFor="b2c"
-                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                      >
-                        <User className="mb-3 h-6 w-6" />
-                        <div className="text-center">
-                          <div className="font-semibold">Personal</div>
-                          <div className="text-xs text-muted-foreground">Individual customer</div>
-                        </div>
-                      </Label>
-                    </div>
-                    <div>
-                      <RadioGroupItem value="B2B" id="b2b" className="peer sr-only" />
-                      <Label
-                        htmlFor="b2b"
-                        className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                      >
-                        <Building className="mb-3 h-6 w-6" />
-                        <div className="text-center">
-                          <div className="font-semibold">Business</div>
-                          <div className="text-xs text-muted-foreground">Special B2B pricing</div>
-                        </div>
-                      </Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {formData.accountType === 'B2B' && (
-                  <div className="space-y-2">
-                    <Label htmlFor="company">Company Name</Label>
-                    <Input
-                      id="company"
-                      name="company"
-                      type="text"
-                      placeholder="Enter your company name"
-                      value={formData.company}
-                      onChange={handleChange}
-                      required
-                    />
-                  </div>
-                )}
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Password</Label>
+            {inputs.map((input) => (
+              <div key={input.id} className="space-y-2">
+                {input.id === 'password' && (
                   <div className="relative">
                     <Input
-                      id="password"
-                      name="password"
-                      type={showPassword ? 'text' : 'password'}
-                      placeholder="Create a password"
-                      value={formData.password}
+                      id={input.id}
+                      name={input.name}
+                      type={input.type}
+                      placeholder={input.placeholder}
+                      value={formData[input.name as keyof typeof formData]}
                       onChange={handleChange}
-                      required
+                      required={input.required}
+                      className="w-full bg-transparent border-white text-white placeholder-gray-400"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white"
                       onClick={() => setShowPassword(!showPassword)}
                     >
                       {showPassword ? (
@@ -213,25 +126,24 @@ export default function RegisterPage() {
                       )}
                     </Button>
                   </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">Confirm Password</Label>
+                )}
+                {input.id === 'confirmPassword' && (
                   <div className="relative">
                     <Input
-                      id="confirmPassword"
-                      name="confirmPassword"
-                      type={showConfirmPassword ? 'text' : 'password'}
-                      placeholder="Confirm your password"
-                      value={formData.confirmPassword}
+                      id={input.id}
+                      name={input.name}
+                      type={input.type}
+                      placeholder={input.placeholder}
+                      value={formData[input.name as keyof typeof formData]}
                       onChange={handleChange}
-                      required
+                      required={input.required}
+                      className="w-full bg-transparent border-white text-white placeholder-gray-400"
                     />
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
-                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                      className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent text-white"
                       onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                     >
                       {showConfirmPassword ? (
@@ -241,29 +153,40 @@ export default function RegisterPage() {
                       )}
                     </Button>
                   </div>
-                </div>
-              </CardContent>
+                )}
+                {(input.id !== 'password' && input.id !== 'confirmPassword') && (
+                  <Input
+                    id={input.id}
+                    name={input.name}
+                    type={input.type}
+                    placeholder={input.placeholder}
+                    value={formData[input.name as keyof typeof formData]}
+                    onChange={handleChange}
+                    required={input.required}
+                    className="w-full bg-transparent border-white text-white placeholder-gray-400"
+                  />
+                )}
+              </div>
+            ))}
 
-              <CardFooter className="flex flex-col space-y-4">
-                <Button type="submit" className="w-full" disabled={isLoading}>
-                  {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
-                  Create Account
-                </Button>
+            <div className="text-left text-sm">
+              <Link
+                href="/privacy-policy"
+                className="text-blue-500 hover:underline"
+              >
+                Privacy Policy
+              </Link>
+            </div>
 
-                <Separator />
-
-                <div className="text-center text-sm text-muted-foreground">
-                  Already have an account?{' '}
-                  <Link
-                    href="/auth/login"
-                    className="text-primary hover:underline font-medium"
-                  >
-                    Sign in
-                  </Link>
-                </div>
-              </CardFooter>
-            </form>
-          </Card>
+            <Button
+              type="submit"
+              className="w-full bg-purple-600 hover:bg-purple-700 text-white py-2"
+              disabled={isLoading}
+            >
+              {isLoading && <Loader className="mr-2 h-4 w-4 animate-spin" />}
+              Register
+            </Button>
+          </form>
         </div>
       </div>
 

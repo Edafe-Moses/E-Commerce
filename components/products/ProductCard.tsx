@@ -24,9 +24,12 @@ export function ProductCard({ product }: ProductCardProps) {
   const [isLiked, setIsLiked] = useState(false);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  const displayPrice = user?.accountType === 'B2B' && product.b2bPrice 
-    ? product.b2bPrice 
-    : product.price;
+  const displayPrice = typeof product.b2bPrice === 'number' && user?.accountType === 'B2B'
+  ? product.b2bPrice
+  : typeof product.price === 'number'
+    ? product.price
+    : 0;
+
 
   const handleAddToCart = async () => {
     setIsAddingToCart(true);
@@ -68,8 +71,8 @@ export function ProductCard({ product }: ProductCardProps) {
                 className="w-full h-full"
               >
                 <Image
-                  src={product.image}
-                  alt={product.name}
+                  src={product.src}
+                  alt={product.title}
                   fill
                   className="object-cover"
                 />

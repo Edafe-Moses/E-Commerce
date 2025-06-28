@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 
 export interface Product {
+  title: string;
+  src: string | StaticImport;
   id: string;
   name: string;
   description: string;
